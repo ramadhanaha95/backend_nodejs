@@ -3,6 +3,7 @@ import {
 } from '../config/database.js'
 import bcrypt from 'bcrypt'
 import resp_code from '../src/libs/response_code.js'
+
 //this is set of data to encrypt or decrypt data
 import {
     SetResponseJsonEncrypt
@@ -10,6 +11,7 @@ import {
 import {
     SetResponseJsonDecrypt
 } from '../src/libs/response_decrypt.js'
+
 //this is to get jwt token
 import {
     GetJwtToken
@@ -22,21 +24,18 @@ import {
 import dotenv from 'dotenv'
 dotenv.config()
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
     var username = req.body.username;
     var password = req.body.password;
     var credential = login_validation(username, password)
 
     if (credential == true) {
         const db = await DB()
-        const users = await db.query("SELECT * FROM users WHERE username = ?", [username], (err, result, fields) => {
+        const users = await db.query("SELECT * FROM users WHERE username = ?", [username], (err, result) => {
             if (err) {
                 return res.json(err)
             } else {
                 if (result.length != 0) {
-                    // var salt = bcrypt.genSaltSync(12);
-                    // var hashPassword = bcrypt.hashSync("josspeople", salt);
-
                     bcrypt.compare(password, result[0].password, function (err, rest) {
                         if (rest == true) {
                             const token = GetJwtToken(result[0].id)
@@ -56,7 +55,6 @@ const login = async (req, res) => {
 
                                 dataJson.push(resp_json)
                             }
-                            // var getResponse = SetResponseJsonEncrypt(dataJson)
                             // var getResponseDecrypt = SetResponseJsonDecrypt(getResponse)
 
                             var data = dataJson;
@@ -78,14 +76,15 @@ const login = async (req, res) => {
     }
 }
 
-const register = async (req, res) => {
-    var username = req.body.username;
+export const register = async (req, res) => {
+    var username = req.body.username.toLowerCase();
     var password = req.body.password;
     var email = req.body.email;
-    var nama_lengkap = req.body.nama_lengkap;
+    var nama_lengkap = req.body.nama_lengkap.toUpperCase();
     var handphone = req.body.handphone;
     var whatsapp = req.body.whatsapp;
 
+    //hashing password
     var salt = bcrypt.genSaltSync(12);
     var hashPassword = bcrypt.hashSync(password, salt);
 
@@ -98,22 +97,31 @@ const register = async (req, res) => {
             await db.beginTransaction()
 
             var query1 = `INSERT INTO users (username, password, email, role_id) VALUES (?,?,?,?)`;
-
-            const insertUsers = await db.query(query1, [username, hashPassword, email, 1], (err, result, fields) => {
+            
+            const insertUsers = await db.query(query1, [username, hashPassword, email, 1], (err, result) => {
                 if (err) {
-                    return res.json(["failed"])
+                    db.rollback(() => {
+                        return res.json(err)
+                    });
                 }else{
                     var query2 = `INSERT INTO user_details (user_id, nama_lengkap, handphone, whatsapp) VALUES (?,?,?,?)`;
-                    db.query(query2, [1, nama_lengkap, handphone, whatsapp])
-    
-                    return res.json(["success"])
+                    db.query(query2, [result.insertId, nama_lengkap, handphone, whatsapp], (err, result) => {
+                        if(err){
+                            db.rollback(() => {
+                                return res.json(err)
+                            });
+                        }else{
+                            db.commit()
+                            return res.json(resp_code[0])
+                        }
+                    })
                 }
             })
 
-            await db.commit()
         } catch (err) {
-            await db.rollback()
-            return res.json(err)
+            await db.rollback(() => {
+                return res.json(err)
+            });
         }
     } else {
         var data = [resp_code[3]];
@@ -121,7 +129,7 @@ const register = async (req, res) => {
     }
 }
 
-const getDataUser = async (req, res) => {
+export const getDataUser = async (req, res) => {
     var user_id = req.user.id
 
     const db = await DB()
@@ -136,7 +144,7 @@ const getDataUser = async (req, res) => {
                 ON a.id = b.user_id
                 WHERE a.id = ?`;
 
-    const users = await db.query(query, [user_id], (err, result, fields) => {
+    const users = await db.query(query, [user_id], (err, result) => {
         if (err) {
             return res.json(err)
         } else {
@@ -152,18 +160,15 @@ const getDataUser = async (req, res) => {
                     resp_code: resp_code[0]
                 })
             }
-            return res.json(dataUser)
+
+            //encrypting response
+            var getResponse = SetResponseJsonEncrypt(dataUser)
+
+            return res.json(getResponse)
         }
     })
 }
 
-const getData_params = (req, res) => {
+export const getData_params = (req, res) => {
     return res.json(req.body)
 }
-
-export {
-    login,
-    register,
-    getDataUser,
-    getData_params
-};

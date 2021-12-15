@@ -1,5 +1,4 @@
 import express from 'express'
-import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -8,7 +7,7 @@ const PORT = process.env.PORT
 
 import api from './routes/api.js'
 
-app.use(bodyParser.json())
+app.use(express.json())
 
 // app.use('/api', api)
 
