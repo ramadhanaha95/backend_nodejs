@@ -1,6 +1,7 @@
 import express from 'express'
 const router = express.Router()
 import * as AuthController from '../controllers/AuthController.js'
+import * as UploadController from '../controllers/UploadController.js'
 import { VerifyToken } from '../src/auth/jwt/useJwt.js'
 
 express.application.prefix = express.Router.prefix = function(path, middleware, configure) {
@@ -16,6 +17,10 @@ router.post('/register', AuthController.register);
 router.prefix('/auth', VerifyToken, async function (user) {
     user.get('/getDataUser', AuthController.getDataUser);
     user.get('/getData/:id', AuthController.getData_params);
+
+    //Example Upload File
+    user.post('/Upload', UploadController.Upload);
+    user.post('/Upload2', UploadController.Upload2);
 });
 
 export default router
