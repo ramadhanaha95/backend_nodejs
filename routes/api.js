@@ -14,6 +14,7 @@ express.application.prefix = express.Router.prefix = function(path, middleware, 
 router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
 
+// grouping router with jwt verify
 router.prefix('/auth', VerifyToken, async function (user) {
     user.get('/getDataUser', AuthController.getDataUser);
     user.get('/getData/:id', AuthController.getData_params);
