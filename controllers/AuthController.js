@@ -105,6 +105,7 @@ export const register = async (req, res) => {
                         return res.json(err)
                     });
                 }else{
+                    // insert to user_details and get last insertId from result
                     var query2 = `INSERT INTO user_details (user_id, nama_lengkap, handphone, whatsapp) VALUES (?,?,?,?)`;
                     db.query(query2, [result.insertId, nama_lengkap, handphone, whatsapp], (err, result) => {
                         if(err){
