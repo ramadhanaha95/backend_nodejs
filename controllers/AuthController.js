@@ -136,14 +136,10 @@ export const getDataUser = async (req, res) => {
 
     const db = await DB()
 
+    //select from table view user_data
     var query = `SELECT
-                a.id,
-                b.handphone,
-                b.whatsapp,
-                b.nama_lengkap
-                FROM users as a
-                LEFT JOIN user_details as b
-                ON a.id = b.user_id
+                a.*
+                FROM user_data as a
                 WHERE a.id = ?`;
 
     const users = await db.query(query, [user_id], (err, result) => {
@@ -155,8 +151,11 @@ export const getDataUser = async (req, res) => {
                 dataUser.push({
                     data: {
                         id: result[i].id,
-                        handphone: result[i].handphone,
+                        username: result[i].username,
+                        email: result[i].email,
+                        role_id: result[i].role_id,
                         nama_lengkap: result[i].nama_lengkap,
+                        handphone: result[i].handphone,
                         whatsapp: result[i].whatsapp
                     },
                     resp_code: resp_code[0]
