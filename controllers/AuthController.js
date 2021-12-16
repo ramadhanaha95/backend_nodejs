@@ -27,6 +27,7 @@ dotenv.config()
 export const login = async (req, res) => {
     var username = req.body.username;
     var password = req.body.password;
+    //this is for login validation
     var credential = login_validation(username, password)
 
     if (credential == true) {
