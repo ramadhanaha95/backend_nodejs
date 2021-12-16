@@ -103,6 +103,10 @@ const Upload2 = (req, res) => {
     })
 }
 
+//export fuction bisa di taruh di bawah
+//atau di taruh di depan function
+//ex: export const <nama function>
+
 export {
     Upload,
     Upload2
