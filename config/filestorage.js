@@ -1,3 +1,4 @@
+//ftp config
 import FTPClient from 'ftp'
 
 let ftp_client = new FTPClient();
