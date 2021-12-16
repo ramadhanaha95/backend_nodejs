@@ -4,8 +4,8 @@ let ftp_client = new FTPClient();
 let ftp1 = {
      host: "localhost",
      port: 21,
-     user: 'bznid',
-     password: 'josspeople',
+     user: 'admin',
+     password: 'tufFx506i',
 }
 
 export {
