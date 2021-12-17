@@ -1,5 +1,6 @@
 import {
-    DB
+    DB,
+    SQLSRV
 } from '../config/database.js'
 import bcrypt from 'bcrypt'
 import resp_code from '../src/libs/response_code.js'
@@ -21,10 +22,12 @@ import {
     register_validation
 } from '../src/validations/form_validation.js'
 
+import sql from 'mssql'
+
 import dotenv from 'dotenv'
 dotenv.config()
 
-export const login = async (req, res) => {
+export async function login(req, res) {
     var username = req.body.username;
     var password = req.body.password;
     //this is for login validation
@@ -77,7 +80,7 @@ export const login = async (req, res) => {
     }
 }
 
-export const register = async (req, res) => {
+export async function register(req, res) {
     var username = req.body.username.toLowerCase();
     var password = req.body.password;
     var email = req.body.email;
@@ -98,21 +101,21 @@ export const register = async (req, res) => {
             await db.beginTransaction()
 
             var query1 = `INSERT INTO users (username, password, email, role_id) VALUES (?,?,?,?)`;
-            
+
             const insertUsers = await db.query(query1, [username, hashPassword, email, 1], (err, result) => {
                 if (err) {
                     db.rollback(() => {
                         return res.json(err)
                     });
-                }else{
+                } else {
                     // insert to user_details and get last insertId from result
                     var query2 = `INSERT INTO user_details (user_id, nama_lengkap, handphone, whatsapp) VALUES (?,?,?,?)`;
                     db.query(query2, [result.insertId, nama_lengkap, handphone, whatsapp], (err, result) => {
-                        if(err){
+                        if (err) {
                             db.rollback(() => {
                                 return res.json(err)
                             });
-                        }else{
+                        } else {
                             db.commit()
                             return res.json(resp_code[0])
                         }
@@ -131,7 +134,7 @@ export const register = async (req, res) => {
     }
 }
 
-export const getDataUser = async (req, res) => {
+export async function getDataUser(req, res) {
     var user_id = req.user.id
 
     const db = await DB()
@@ -170,6 +173,48 @@ export const getDataUser = async (req, res) => {
     })
 }
 
-export const getData_params = (req, res) => {
-    return res.json(req.body)
+export function getDataSqlsrv(req, res) {
+    //M SQL DATABASE
+    var user_id = req.body.user_id
+    sql.connect(SQLSRV, function (err) {
+        if (err) {
+            return res.json(err)
+        } else {
+            // create Request object
+            var db = new sql.Request();
+
+            // query to the database and get the records
+            var query1 = `SELECT * FROM users
+            WHERE id = @id AND role_id = @role_id`;
+
+            db.input('id', sql.Int, user_id)
+            db.input('role_id', sql.Int, 1)
+
+            db.query(query1, function (err, recordset) {
+                if (err) {
+                    return res.json(err)
+                } else {
+                    console.log(1)
+                    getID(recordset.recordset)
+                    // return res.json(recordset.recordset)
+                }
+            });
+
+            function getID(payload) {
+                var query2 = `SELECT * FROM user_details
+                WHERE id = @id2`;
+
+                db.input('id2', sql.Int, 2)
+
+                db.query(query2, function (err, recordset) {
+                    if (err) {
+                        return res.json(err)
+                    } else {
+                        var data = [recordset.recordset, payload]
+                        return res.json(data)
+                    }
+                });
+            }
+        }
+    });
 }

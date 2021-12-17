@@ -36,7 +36,7 @@ import {
 dotenv.config()
 
 //Single File
-const Upload = (req, res) => {
+function Upload(req, res) {
     let form = new formidable.IncomingForm()
     form.parse(req, function (err, fields, files) {
         var newpath = '/' + files.image.originalFilename;
@@ -75,7 +75,7 @@ const Upload = (req, res) => {
 }
 
 //Multiple File
-const Upload2 = (req, res) => {
+function Upload2(req, res) {
     ftp_client.connect(ftp1);
 
     let form = new formidable.IncomingForm()
