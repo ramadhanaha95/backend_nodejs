@@ -15,10 +15,10 @@
     "fs": "0.0.1-security",
     "ftp": "^0.3.10",
     "jsonwebtoken": "^8.5.1",
+    "mssql": "^7.3.0",
     "mysql": "^2.18.1",
     "nodemon": "^2.0.15",
-    "npm-watch": "^0.11.0",
-    "tedious": "^14.0.0"
+    "npm-watch": "^0.11.0"
   },
   "devDependencies": {},
   "scripts": {

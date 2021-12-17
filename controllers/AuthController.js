@@ -21,6 +21,7 @@ import {
     login_validation,
     register_validation
 } from '../src/validations/form_validation.js'
+import sql from 'mssql'
 
 import dotenv from 'dotenv'
 dotenv.config()
