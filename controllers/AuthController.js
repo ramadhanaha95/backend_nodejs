@@ -98,11 +98,10 @@ export async function register(req, res) {
         const db = await DB()
 
         try {
-            await db.beginTransaction()
+            db.beginTransaction()
 
             var query1 = `INSERT INTO users (username, password, email, role_id) VALUES (?,?,?,?)`;
-
-            const insertUsers = await db.query(query1, [username, hashPassword, email, 1], (err, result) => {
+            db.query(query1, [username, hashPassword, email, 1], (err, result) => {
                 if (err) {
                     db.rollback(() => {
                         return res.json(err)
@@ -140,10 +139,7 @@ export async function getDataUser(req, res) {
     const db = await DB()
 
     //select from table view user_data
-    var query = `SELECT
-                a.*
-                FROM user_data as a
-                WHERE a.id = ?`;
+    var query = `SELECT a.* FROM user_data as a WHERE a.id = ?`;
 
     const users = await db.query(query, [user_id], (err, result) => {
         if (err) {
@@ -180,41 +176,34 @@ export function getDataSqlsrv(req, res) {
         if (err) {
             return res.json(err)
         } else {
-            // create Request object
             var db = new sql.Request();
 
-            // query to the database and get the records
-            var query1 = `SELECT * FROM users
-            WHERE id = @id AND role_id = @role_id`;
+            var query1 = `SELECT * FROM users WHERE id = @id AND role_id = @role_id`;
 
+            //parameter in where define here
             db.input('id', sql.Int, user_id)
             db.input('role_id', sql.Int, 1)
 
-            db.query(query1, function (err, recordset) {
+            //excecute query
+            db.query(query1, function (err, result) {
                 if (err) {
                     return res.json(err)
                 } else {
-                    console.log(1)
-                    getID(recordset.recordset)
-                    // return res.json(recordset.recordset)
+                    var query2 = `SELECT * FROM user_details WHERE id = @id2`;
+
+                    //parameter in where define here
+                    db.input('id2', sql.Int, 2)
+
+                    //excecute query
+                    db.query(query2, function (err, result) {
+                        if (err) {
+                            return res.json(err)
+                        } else {
+                            return res.json(result.recordset)
+                        }
+                    });
                 }
             });
-
-            function getID(payload) {
-                var query2 = `SELECT * FROM user_details
-                WHERE id = @id2`;
-
-                db.input('id2', sql.Int, 2)
-
-                db.query(query2, function (err, recordset) {
-                    if (err) {
-                        return res.json(err)
-                    } else {
-                        var data = [recordset.recordset, payload]
-                        return res.json(data)
-                    }
-                });
-            }
         }
     });
 }
