@@ -1,5 +1,4 @@
 import mysql from 'mysql'
-import sql from 'mssql'
 
 import dotenv from 'dotenv'
 dotenv.config()
