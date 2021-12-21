@@ -16,6 +16,10 @@ const resp_code = [
         code: '03',
         status: 'Incomplete form'
     },
+    {
+        code: '04',
+        status: 'Upload Berhasil'
+    },
 ]
 
 export default resp_code
