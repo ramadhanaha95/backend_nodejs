@@ -37,26 +37,25 @@ export function Upload(req, res) {
             const ftp_client = await new FTPClient();
             await ftp_client.connect(ftp1);
             await ftp_client.on('ready', function () {
-                ftp_client.put(result, newpath,async function (err) {
+                ftp_client.put(result, newpath, async function (err) {
                     if (err) {
-                        return res.json(err)
+                        res.json(err)
                     } else {
-                        const db = await MYSQL()
                         try {
-                            db.beginTransaction()
+                            await MYSQL.beginTransaction()
                             let query = `INSERT INTO file_upload (user_id, file) VALUES (?,?)`;
-                            db.query(query, [req.user.id, newpath], (err, result) => {
+                            await MYSQL.query(query, [req.user.id, newpath], (err, result) => {
                                 if (err) {
-                                    db.rollback(() => {
-                                    return res.json(err)
+                                    MYSQL.rollback(() => {
+                                    res.json(err)
                                     });
                                 } else {
-                                    db.commit()
+                                    MYSQL.commit()
                                 }
                             })
                         } catch (err) {
-                            await db.rollback(() => {
-                                return res.json(err)
+                            await MYSQL.rollback(() => {
+                                res.json(err)
                             });
                         }
                     }
@@ -64,7 +63,7 @@ export function Upload(req, res) {
             });
         })
     });
-    return res.json(resp_code[4])
+    res.json(resp_code[4])
 }
 
 //Multiple File
