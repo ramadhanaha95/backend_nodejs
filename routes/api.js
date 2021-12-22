@@ -13,7 +13,7 @@ express.application.prefix = express.Router.prefix = function(path, middleware, 
 // router api
 router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
-router.get('/email_verification/:user_id/:verification_code', AuthController.register_verification);
+router.post('/email_verification', AuthController.register_verification);
 
 // grouping router with jwt verify
 router.prefix('/auth', VerifyToken, async function (user) {
@@ -22,6 +22,7 @@ router.prefix('/auth', VerifyToken, async function (user) {
     //Example Upload File
     user.post('/Upload', UploadController.Upload);
     user.post('/Upload2', UploadController.Upload2);
+    user.post('/UploadKTP', UploadController.UploadKTP);
 });
 
 export default router

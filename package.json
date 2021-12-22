@@ -29,7 +29,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js",
     "start": "node app.js",
-    "watch": "npm-watch"
+    "watch": "npm-watch",
+    "migration": "node migration.js add migration create_migration"
   },
   "watch": {
     "build": {
