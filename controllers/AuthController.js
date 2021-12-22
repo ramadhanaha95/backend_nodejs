@@ -12,6 +12,10 @@ import {
     register_validation
 } from '../src/validations/form_validation.js'
 
+import {transporter,mailOptions} from '../config/email.js'
+import Mustache, * as mustache from 'mustache'
+import fs from 'fs'
+
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -60,6 +64,8 @@ export async function login(req, res) {
 }
 
 export async function register(req, res, next) {
+
+    let template = fs.readFileSync('./config/mailer.html', 'utf8');
     var username = req.body.username.toLowerCase();
     var password = req.body.password;
     var email = req.body.email;
@@ -75,33 +81,125 @@ export async function register(req, res, next) {
 
     if (reg_validation == true) {
         try {
+            let email_verification = ''
+            let randomChars = '1234567890';
+            for (let i = 0; i < 6; i++) {
+                email_verification += randomChars.charAt(Math.floor(Math.random() * randomChars.length))
+            }
             await MYSQL.beginTransaction()
 
-            var query1 = `INSERT INTO users (username, password, email, role_id) VALUES (?,?,?,?)`;
-            const insert_users = await MYSQL.query(query1, [username, hashPassword, email, 1])
-
+            var query1 = `INSERT INTO users (username, password, email, role_id,email_verification) VALUES (?,?,?,?,?)`;
+            const insert_users = await MYSQL.query(query1, [username, hashPassword, email, 1,email_verification])
+            
             var query2 = `INSERT INTO user_details (user_id, nama_lengkap, handphone, whatsapp) VALUES (?,?,?,?)`;
             const insert_user_details = await MYSQL.query(query2, [insert_users.insertId, nama_lengkap, handphone, whatsapp])
-            await MYSQL.commit()
+            
+            //Mengirim Email Registrasi
 
-            return res.send(resp_code[0])
+            var payload = {
+                "nama_lengkap" : nama_lengkap,
+                "email_verification" : email_verification,
+                "app_url": process.env.APP_URL,
+                "user_id": insert_users.insertId,
+            }
+            mailOptions.to = email
+            mailOptions.html = Mustache.render(template, payload)
+            await transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                  console.log(error);
+                }
+              });
+            await MYSQL.commit()
+            return res.status(200).json("Silahkan Cek Email Anda")
 
         } catch (err) {
             await MYSQL.rollback(() => {
-                return res.send(err)
+                return res.json(err.message)
             });
         }
     } else {
+        var data = [resp_code[3]];
+        return res.json(data)
         var data = resp_code[3];
         data.status = reg_validation
-        return res.send(data)
+        return res.json(data)
     }
 }
 
 export async function getDataUser(req, res) {
     var user_id = req.user.id
+    var user_from_jwt = req.user
 
     //select from table view user_data
+    var query = `SELECT a.* FROM user_details as a WHERE a.id = ?`;
+    const [users] = await MYSQL.query(query, [user_id])
+    .catch(err => {
+        return res.json(err)
+    })
+
+    return res.json(user_from_jwt)
+}
+
+export function getDataSqlsrv(req, res) {
+    //M SQL DATABASE
+    var user_id = req.body.user_id
+    sql.connect(SQLSRV, function (err) {
+        if (err) {
+            return res.json(err)
+        } else {
+            var db = new sql.Request();
+
+            var query1 = `SELECT * FROM users WHERE id = @id AND role_id = @role_id`;
+
+            //parameter in where define here
+            db.input('id', sql.Int, user_id)
+            db.input('role_id', sql.Int, 1)
+
+            //excecute query
+            db.query(query1, function (err, result) {
+                if (err) {
+                    return res.json(err)
+                } else {
+                    var query2 = `SELECT * FROM user_details WHERE id = @id2`;
+
+                    //parameter in where define here
+                    db.input('id2', sql.Int, 2)
+
+                    //excecute query
+                    db.query(query2, function (err, result) {
+                        if (err) {
+                            return res.json(err)
+                        } else {
+                            return res.json(result.recordset)
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+export async function register_verification(req,res) {
+    let user_id = req.params.user_id
+    let email_verification = req.params.verification_code
+    
+    try {
+        await MYSQL.beginTransaction()
+
+        var query_select_users = "SELECT * FROM users where id =?"
+        const [select_users] = await MYSQL.query(query_select_users, user_id)
+        if(parseInt(email_verification) == select_users.email_verification){
+            var query_update_users = "UPDATE users SET email_verification_status = 2 WHERE id = ?"
+            MYSQL.query(query_update_users,user_id)
+            res.json("Berhasil Verifikasi")
+        }else{
+            res.json("Kode verifikasi salah, mohon coba lagi")
+        }
+
+    } catch {
+
+    }
+}
     try {
         var query = `SELECT a.* FROM user_data as a WHERE a.id = ?`;
         const [users] = await MYSQL.query(query, [user_id])
