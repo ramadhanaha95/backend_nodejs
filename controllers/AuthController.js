@@ -140,45 +140,6 @@ export async function getDataUser(req, res) {
     return res.json(user_from_jwt)
 }
 
-export function getDataSqlsrv(req, res) {
-    //M SQL DATABASE
-    var user_id = req.body.user_id
-    sql.connect(SQLSRV, function (err) {
-        if (err) {
-            return res.json(err)
-        } else {
-            var db = new sql.Request();
-
-            var query1 = `SELECT * FROM users WHERE id = @id AND role_id = @role_id`;
-
-            //parameter in where define here
-            db.input('id', sql.Int, user_id)
-            db.input('role_id', sql.Int, 1)
-
-            //excecute query
-            db.query(query1, function (err, result) {
-                if (err) {
-                    return res.json(err)
-                } else {
-                    var query2 = `SELECT * FROM user_details WHERE id = @id2`;
-
-                    //parameter in where define here
-                    db.input('id2', sql.Int, 2)
-
-                    //excecute query
-                    db.query(query2, function (err, result) {
-                        if (err) {
-                            return res.json(err)
-                        } else {
-                            return res.json(result.recordset)
-                        }
-                    });
-                }
-            });
-        }
-    });
-}
-
 export async function register_verification(req,res) {
     let user_id = req.params.user_id
     let email_verification = req.params.verification_code
@@ -198,14 +159,5 @@ export async function register_verification(req,res) {
 
     } catch {
 
-    }
-}
-    try {
-        var query = `SELECT a.* FROM user_data as a WHERE a.id = ?`;
-        const [users] = await MYSQL.query(query, [user_id])
-        
-        return res.json(users)
-    } catch (err) {
-        return res.json(err)
     }
 }
