@@ -2,11 +2,10 @@ import Jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 dotenv.config()
 
-export const GetJwtToken = (id,role_id,email_verification_status) => {
+export const GetJwtToken = (id,role_id) => {
     const token = Jwt.sign({
         id: id,
-        role_id: role_id,
-        email_verification_status: email_verification_status
+        role_id: role_id
     }, process.env.TOKEN_SECRET, {
         expiresIn: '1h'
     });

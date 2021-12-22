@@ -18,7 +18,6 @@ router.get('/email_verification/:user_id/:verification_code', AuthController.reg
 // grouping router with jwt verify
 router.prefix('/auth', VerifyToken, async function (user) {
     user.get('/getDataUser', AuthController.getDataUser);
-    user.get('/getDataSqlsrv', AuthController.getDataSqlsrv);
 
     //Example Upload File
     user.post('/Upload', UploadController.Upload);

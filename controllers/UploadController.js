@@ -1,8 +1,7 @@
 import {
-    MYSQL,
-    SQLSRV
+    MYSQL
 } from '../config/database.js'
-import resp_code from '../src/libs/response_code.js'
+import resp_code from '../src/libs/response/response_code.js'
 import dotenv from 'dotenv'
 
 //Required when use File Upload
