@@ -118,8 +118,6 @@ export async function register(req, res, next) {
             });
         }
     } else {
-        var data = [resp_code[3]];
-        return res.json(data)
         var data = resp_code[3];
         data.status = reg_validation
         return res.json(data)
@@ -157,7 +155,7 @@ export async function register_verification(req,res) {
             res.json("Kode verifikasi salah, mohon coba lagi")
         }
 
-    } catch {
-
+    } catch (err) {
+        return res.status(500).json(err)
     }
 }
