@@ -30,7 +30,7 @@
     "dev": "nodemon app.js",
     "start": "node app.js",
     "watch": "npm-watch",
-    "migration": "node migration.js add migration create_migration"
+    "migration": "node migration.js"
   },
   "watch": {
     "build": {
