@@ -18,7 +18,8 @@
     "mssql": "^7.3.0",
     "mysql": "^2.18.1",
     "nodemon": "^2.0.15",
-    "npm-watch": "^0.11.0"
+    "npm-watch": "^0.11.0",
+    "tesseract.js": "^2.1.5"
   },
   "devDependencies": {},
   "scripts": {
