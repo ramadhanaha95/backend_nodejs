@@ -14,6 +14,10 @@ import {
 } from '../src/validations/form_validation.js'
 import sql from 'mssql'
 
+import {transporter,mailOptions} from '../config/email.js'
+import Mustache, * as mustache from 'mustache'
+import fs from 'fs'
+
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -30,7 +34,7 @@ export async function login(req, res) {
         if (login) {
             bcrypt.compare(password, login.password, function (err, rest) {
                 if (rest == true) {
-                    const token = GetJwtToken(login.id)
+                    const token = GetJwtToken(login.id,login.role_id,login.email_verification_status)
 
                     var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
                     MYSQL.query(query1, login.id);
@@ -58,6 +62,8 @@ export async function login(req, res) {
 }
 
 export async function register(req, res, next) {
+
+    let template = fs.readFileSync('./config/mailer.html', 'utf8');
     var username = req.body.username.toLowerCase();
     var password = req.body.password;
     var email = req.body.email;
@@ -73,39 +79,60 @@ export async function register(req, res, next) {
 
     if (reg_validation == true) {
         try {
+            let email_verification = ''
+            let randomChars = '1234567890';
+            for (let i = 0; i < 6; i++) {
+                email_verification += randomChars.charAt(Math.floor(Math.random() * randomChars.length))
+            }
             await MYSQL.beginTransaction()
 
-            var query1 = `INSERT INTO users (username, password, email, role_id) VALUES (?,?,?,?)`;
-            const insert_users = await MYSQL.query(query1, [username, hashPassword, email, 1])
+            var query1 = `INSERT INTO users (username, password, email, role_id,email_verification) VALUES (?,?,?,?,?)`;
+            const insert_users = await MYSQL.query(query1, [username, hashPassword, email, 1,email_verification])
             
             var query2 = `INSERT INTO user_details (user_id, nama_lengkap, handphone, whatsapp) VALUES (?,?,?,?)`;
             const insert_user_details = await MYSQL.query(query2, [insert_users.insertId, nama_lengkap, handphone, whatsapp])
-            await MYSQL.commit()
             
-            return res.send(resp_code[0])
+            //Mengirim Email Registrasi
+
+            var payload = {
+                "nama_lengkap" : nama_lengkap,
+                "email_verification" : email_verification,
+                "app_url": process.env.APP_URL,
+                "user_id": insert_users.insertId,
+            }
+            mailOptions.to = email
+            mailOptions.html = Mustache.render(template, payload)
+            await transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                  console.log(error);
+                }
+              });
+            await MYSQL.commit()
+            return res.status(200).json("Silahkan Cek Email Anda")
 
         } catch (err) {
             await MYSQL.rollback(() => {
-                return res.send(err)
+                return res.json(err.message)
             });
         }
     } else {
         var data = [resp_code[3]];
-        return res.send(data)
+        return res.json(data)
     }
 }
 
 export async function getDataUser(req, res) {
     var user_id = req.user.id
+    var user_from_jwt = req.user
 
     //select from table view user_data
-    var query = `SELECT a.* FROM user_data as a WHERE a.id = ?`;
+    var query = `SELECT a.* FROM user_details as a WHERE a.id = ?`;
     const [users] = await MYSQL.query(query, [user_id])
     .catch(err => {
         return res.json(err)
     })
 
-    return res.json(users)
+    return res.json(user_from_jwt)
 }
 
 export function getDataSqlsrv(req, res) {
@@ -146,3 +173,26 @@ export function getDataSqlsrv(req, res) {
         }
     });
 }
+
+export async function register_verification(req,res) {
+    let user_id = req.params.user_id
+    let email_verification = req.params.verification_code
+    
+    try {
+        await MYSQL.beginTransaction()
+
+        var query_select_users = "SELECT * FROM users where id =?"
+        const [select_users] = await MYSQL.query(query_select_users, user_id)
+        if(parseInt(email_verification) == select_users.email_verification){
+            var query_update_users = "UPDATE users SET email_verification_status = 2 WHERE id = ?"
+            MYSQL.query(query_update_users,user_id)
+            res.json("Berhasil Verifikasi")
+        }else{
+            res.json("Kode verifikasi salah, mohon coba lagi")
+        }
+
+    } catch {
+
+    }
+}
+
