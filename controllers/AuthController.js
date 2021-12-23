@@ -145,25 +145,27 @@ export async function register_verification(req, res) {
     let user_id = req.params.user_id
     let email_verification = req.params.verification_code
     try {
-        await MYSQL.beginTransaction()
-
         var query_select_users = "SELECT * FROM users where id =?"
         const [select_users] = await MYSQL.query(query_select_users, user_id)
         if (parseInt(email_verification) == select_users.email_verification) {
+            MYSQL.beginTransaction()
+
             var query_update_users = "UPDATE users SET email_verification_status = 2 WHERE id = ?"
-            MYSQL.query(query_update_users,[user_id])
+            MYSQL.query(query_update_users, [user_id])
             const token = GetJwtToken(select_users.id, select_users.role_id, 2)
 
-                    var query1 = "UPDATE users SET last_login = now() WHERE id = ?"
-                    const last_login = MYSQL.query(query1,user_id);
+            var query1 = "UPDATE users SET last_login = now() WHERE id = ?"
+            const last_login = MYSQL.query(query1, user_id);
 
-                    //IF GENERATE TOKEN SUCCESS
-                    let data = [{
-                        token: token,
-                        resp_code: resp_code[0]
-                    }];
-                    return res.json(data)
-        }else{
+            MYSQL.commit()
+
+            //IF GENERATE TOKEN SUCCESS
+            let data = [{
+                token: token,
+                resp_code: resp_code[0]
+            }];
+            return res.json(data)
+        } else {
             res.json("Kode verifikasi salah, mohon coba lagi")
         }
 
