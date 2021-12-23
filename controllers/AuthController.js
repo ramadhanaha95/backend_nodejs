@@ -37,7 +37,7 @@ export async function login(req, res) {
                 var cek_password = bcrypt.compareSync(password, login.password);
 
                 if (cek_password == true) {
-                    const token = GetJwtToken(login.id, login.role_id)
+                    const token = GetJwtToken(login.id, login.role_id, login.email_verification_status)
 
                     var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
                     const last_login = MYSQL.query(query1, login.id);
@@ -144,7 +144,6 @@ export async function getDataUser(req, res) {
 export async function register_verification(req, res) {
     let user_id = req.params.user_id
     let email_verification = req.params.verification_code
-
     try {
         await MYSQL.beginTransaction()
 
@@ -152,9 +151,19 @@ export async function register_verification(req, res) {
         const [select_users] = await MYSQL.query(query_select_users, user_id)
         if (parseInt(email_verification) == select_users.email_verification) {
             var query_update_users = "UPDATE users SET email_verification_status = 2 WHERE id = ?"
-            MYSQL.query(query_update_users, user_id)
-            res.json("Berhasil Verifikasi")
-        } else {
+            MYSQL.query(query_update_users,[user_id])
+            const token = GetJwtToken(select_users.id, select_users.role_id, 2)
+
+                    var query1 = "UPDATE users SET last_login = now() WHERE id = ?"
+                    const last_login = MYSQL.query(query1,user_id);
+
+                    //IF GENERATE TOKEN SUCCESS
+                    let data = [{
+                        token: token,
+                        resp_code: resp_code[0]
+                    }];
+                    return res.json(data)
+        }else{
             res.json("Kode verifikasi salah, mohon coba lagi")
         }
 
