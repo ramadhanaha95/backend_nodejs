@@ -65,8 +65,6 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
 Reposiroty ini dipersiapkan oleh Pengembang IT Regarsport untuk menyiapkan Backend dari Project Regarfriends agar mudah di pelajari Oleh Seluruh IT Regarsport.
 
 Here's why:
