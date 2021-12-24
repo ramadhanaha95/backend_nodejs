@@ -129,51 +129,72 @@ Install Npm Versi Terbaru
 <details>
   <summary>Daftar Penggunaan</summary>
   <ol>
-    <li>
-      <a href="#penggunaan-dasar-express-js">Penggunaan Dasar ExpressJs</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
+    <li><a href="#penggunaan-dasar">Penggunaan Dasar</a>
     </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
+    <li><a href="#penggunaan-route-api">Penggunaan Route Api</a>
     </li>
     <li><a href="#usage">Usage</a></li>
   </ol>
 </details>
 
-# Penggunaan Dasar Express Js
+# Penggunaan Dasar
 
-1. Perhatikan Pada File 'app.js' Dibawah ini, Default project ini adalah 'type:module', Maka tidak bisa menggunakan 'Require()' untuk memanggil file lain.
+1. Perhatikan Pada Contoh Dibawah ini, Default project ini adalah 'type:module', Maka tidak bisa menggunakan 'Require()' Tetapi Harus Menggunakan 'Import From' untuk memanggil/mengimport file lain.
    ```js
     import express from 'express'
     import dotenv from 'dotenv'
     import cors from 'cors'
     import https from 'https'
-    //import fs from 'fs'
-    dotenv.config()
 
-    const app = express()
+    import {
+        xxx1,
+        xxx2
+    } from '../xxx.js'
+   ```
 
-    const PORT = process.env.PORT
+# Penggunaan Route Api
 
+1. Import file 'api.js' di file 'app.js' untuk membaca routing.
+   ```js
     import api from './routes/api.js'
-    app.use(cors())
-    app.use(express.json())
+   ```
 
-    // app.use('/api', api)
-
+2. Default routing kami gunakan prefix '/api' code dibawah berada di file 'app.js' contoh 'http://alamat.com:port/api/xxxx'.
+   ```js
     app.use('/api', api, function (req, res, next) {
         console.log('Request Type:', req.method)
         next()
     })
-    app.listen(PORT, () => {
-        console.log('Server running on port : http://127.0.0.1:' + PORT)
+   ```
+
+3. Penggunaan port untuk Backend bisa disesuaikan pada file .env .
+   ```sh
+    PORT=9090
+   ```
+   ```js
+    app.use('/api', api, function (req, res, next) {
+        console.log('Request Type:', req.method)
+        next()
     })
+   ```
+   ```
+
+4. Dibawah ini adalah basic pennggunaan route di file '/routes/app.js' dengan memanggil Controller 'AuthController' yang berada di dalam file '/controllers/AuthController.js'.
+   ```js
+    import * as AuthController from '../controllers/AuthController.js'
+
+    router.post('/login', AuthController.login)
+    router.get('/getDataUser', AuthController.getDataUser)
+   ```
+
+4. Masih seperti point nomor 4, tetapi route dibawah menggunakan Grouping Middleware yang sudah kami siapkan dengan prefix 'http://alamat.com:port/api/auth/xxx'.
+   ```js
+    import * as AuthController from '../controllers/AuthController.js'
+
+    router.prefix('/auth', VerifyToken, async function (user) {
+        user.get('/getDataUser', AuthController.getDataUser)
+        user.post('/Upload', UploadController.Upload);
+    });
    ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
