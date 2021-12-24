@@ -176,8 +176,12 @@ Install Npm Versi Terbaru
         console.log('Request Type:', req.method)
         next()
     })
+
+    app.listen(PORT, () => {
+        console.log('Server running on port : http://127.0.0.1:' + PORT)
+    })
    ```
-   ```
+
 
 4. Dibawah ini adalah basic pennggunaan route di file '/routes/app.js' dengan memanggil Controller 'AuthController' yang berada di dalam file '/controllers/AuthController.js'.
    ```js
