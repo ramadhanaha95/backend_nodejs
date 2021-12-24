@@ -158,12 +158,12 @@ export async function register_verification(req, res) {
 
             var query_update_users = "UPDATE users SET email_verification_status = 2 WHERE id = ?"
             MYSQL.query(query_update_users, [user_id])
-            const token = GetJwtToken(select_users.id, select_users.role_id, 2)
+            const token = await GetJwtTokenRedis(select_users.id, select_users.role_id, 2)
 
             var query1 = "UPDATE users SET last_login = now() WHERE id = ?"
-            const last_login = MYSQL.query(query1, user_id);
+            const last_login = await MYSQL.query(query1, user_id);
 
-            MYSQL.commit()
+            await MYSQL.commit()
 
             //IF GENERATE TOKEN SUCCESS
             let data = [{
