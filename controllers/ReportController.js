@@ -6,16 +6,16 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 //Redis
-import { get_from_redis, push_to_redis } from '../src/libs/redis/connect.js'
+import { get_file_upload2_from_redis, push_file_upload2_to_redis } from '../src/libs/redis/redis_get_file_upload2.js'
 
 export async function CobaRedis(req, res) {
     let user_id = req.params.user_id
-    let from_redis = await get_from_redis(user_id)
+    let from_redis = await get_file_upload2_from_redis(user_id)
     if(from_redis == null){
         var query = `SELECT * FROM file_upload2 WHERE user_id = ?`
         const file_upload2 = await MYSQL.query(query, [user_id])
         const result_file_upload2 = JSON.parse(JSON.stringify(file_upload2))
-        let push_redis = await push_to_redis(user_id,result_file_upload2)
+        let push_redis = await push_file_upload2_to_redis(user_id,result_file_upload2)
         res.json(result_file_upload2)
     } else {
         res.json(from_redis)

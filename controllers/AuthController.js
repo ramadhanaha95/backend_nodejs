@@ -5,7 +5,9 @@ import bcrypt from 'bcrypt'
 import resp_code from '../src/libs/response/response_code.js'
 //this is to get jwt token
 import {
-    GetJwtToken
+    GetJwtToken,
+    GetJwtTokenRedis,
+    JwtRedisLogout
 } from '../src/auth/jwt/useJwt.js'
 import {
     login_validation,
@@ -30,14 +32,17 @@ export async function login(req, res) {
 
     if (credential == true) {
         try {
-            var query1 = "SELECT * FROM users WHERE username = ?";
-            const [login] = await MYSQL.query(query1, [username])
+            var query1 = "SELECT * FROM users WHERE username = ? and user_banned = ?";
+            const [login] = await MYSQL.query(query1, [username,1])
 
             if (login) {
                 var cek_password = bcrypt.compareSync(password, login.password);
 
                 if (cek_password == true) {
-                    const token = GetJwtToken(login.id, login.role_id, login.email_verification_status)
+                    //const token = GetJwtToken(login.id, login.role_id, login.email_verification_status)
+
+                    //Menggunakan Redis Untuk Auth
+                    const token = await GetJwtTokenRedis(login.id, login.role_id, login.email_verification_status)
 
                     var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
                     const last_login = MYSQL.query(query1, login.id);
@@ -174,4 +179,11 @@ export async function register_verification(req, res) {
     } catch (err) {
         return res.status(500).json(err)
     }
+}
+
+export async function logout(req, res) {
+    var user_id = req.user.id
+    console.log(user_id)
+    const logout_user = await JwtRedisLogout(user_id)
+    return res.json(logout_user)
 }
