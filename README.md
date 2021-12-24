@@ -24,7 +24,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
+  <a href="https://github.com/ap699285/backend_nodejs">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
