@@ -8,7 +8,7 @@ export const GetJwtToken = (id,role_id,email_verification_status) => {
         role_id: role_id,
         email_verification_status: email_verification_status
     }, process.env.TOKEN_SECRET, {
-        expiresIn: '1h'
+        expiresIn: '100h'
     });
 
     return token
@@ -25,7 +25,11 @@ export const VerifyToken = (req, res, next) => {
         const decoded = Jwt.verify(theToken, process.env.TOKEN_SECRET)
         req.user = decoded
         if(decoded.email_verification_status == 1){
-            return res.status(403).json("Please check and verify the email first")
+            let data = {
+                msg : "Please check and verify the email first",
+                user_id : decoded.id
+            }
+            return res.status(403).json(data)
         }
     } catch (err) {
         return res.status(401).json("Invalid Token")

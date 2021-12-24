@@ -142,12 +142,13 @@ export async function getDataUser(req, res) {
 }
 
 export async function register_verification(req, res) {
-    let user_id = req.params.user_id
-    let email_verification = req.params.verification_code
+    let user_id = req.body.user_id
+    let email_verification = req.body.verification_code
     try {
-        var query_select_users = "SELECT * FROM users where id =?"
-        const [select_users] = await MYSQL.query(query_select_users, user_id)
-        if (parseInt(email_verification) == select_users.email_verification) {
+        var query_select_users = "SELECT * FROM users where id = ?"
+        const [select_users] = await MYSQL.query(query_select_users, [user_id])
+
+        if (email_verification == select_users.email_verification) {
             MYSQL.beginTransaction()
 
             var query_update_users = "UPDATE users SET email_verification_status = 2 WHERE id = ?"
@@ -165,8 +166,9 @@ export async function register_verification(req, res) {
                 resp_code: resp_code[0]
             }];
             return res.json(data)
+
         } else {
-            res.json("Kode verifikasi salah, mohon coba lagi")
+            return res.json("Kode verifikasi salah, mohon coba lagi")
         }
 
     } catch (err) {

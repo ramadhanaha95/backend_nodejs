@@ -3,26 +3,25 @@ import {
 } from '../config/database.js'
 import resp_code from '../src/libs/response/response_code.js'
 import dotenv from 'dotenv'
+dotenv.config()
 
 //Required when use File Upload
 import FTPClient from 'ftp'
 import fs from 'fs'
 import formidable from 'formidable'
+import {
+    compress
+} from '../src/libs/compress_image/compress_image.js'
 
 import {
     ftp1
 } from '../config/filestorage.js'
-import console from 'console'
 
 import {
     proses_gambar,
     getDataKtp
 } from '../src/libs/ocr/tesseract.js'
-import {
-    send
-} from 'process'
 
-dotenv.config()
 
 //Multiple File Dengan Name Yang Sama
 export async function Upload(req, res) {
@@ -34,7 +33,7 @@ export async function Upload(req, res) {
         await form.parse(req, function (err, fields, files) {
 
             let randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            files.gambar.forEach(data => {
+            files.gambar.forEach(async data => {
                 //Mengolah Form Name Array Gambar
                 let dt_gambar = new Date()
                 let dtf_gambar = dt_gambar.getTime()
@@ -46,15 +45,21 @@ export async function Upload(req, res) {
                 let arr_filename_gambar = data.originalFilename.split(".")
                 let ext_gambar = arr_filename_gambar[arr_filename_gambar.length - 1]
                 let tujuan_gambar = nama_file_gambar + "." + ext_gambar
-                fs.readFile(data.filepath, async (err, result) => {
-                    const ftp_client = await new FTPClient()
-                    await ftp_client.connect(ftp1)
-                    await ftp_client.on('ready', function () {
-                        ftp_client.put(result, tujuan_gambar, function (err) {
-                            if (err) {
-                                res.json(err)
-                            }
-                        })
+
+                //Kompress File
+                let image_quality = 20
+                let image_compressed = await compress(data.filepath,image_quality)
+    
+                //Proses Membaca dan Upload Ke FTP
+                const ftp_client = await new FTPClient()
+                await ftp_client.connect(ftp1)
+                await ftp_client.on('ready', async function () {
+                    ftp_client.put(image_compressed, tujuan_gambar, function (err) {
+                        if (err) {
+                            res.json(err)
+                        }
+                        ftp_client.end()
+                        fs.unlinkSync(image_compressed)
                     })
                 })
                 var query = `INSERT INTO file_upload (user_id, file) VALUES (?,?)`
@@ -75,9 +80,7 @@ export async function Upload2(req, res) {
             multiples: true
         })
         await form.parse(req, async function (err, fields, files) {
-
             let randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
             //Mengolah Form Name Gambar1
             let dt_gambar1 = new Date()
             let dtf_gambar1 = dt_gambar1.getTime()
@@ -89,15 +92,21 @@ export async function Upload2(req, res) {
             let arr_filename_gambar1 = files.gambar1.originalFilename.split(".")
             let ext_gambar1 = arr_filename_gambar1[arr_filename_gambar1.length - 1]
             let tujuan_gambar1 = nama_file_gambar1 + "." + ext_gambar1
-            fs.readFile(files.gambar1.filepath, async (err, result) => {
-                const ftp_client = await new FTPClient()
-                await ftp_client.connect(ftp1)
-                await ftp_client.on('ready', function () {
-                    ftp_client.put(result, tujuan_gambar1, function (err) {
-                        if (err) {
-                            res.json(err)
-                        }
-                    })
+
+            //Kompress File
+            let image_quality1 = 20
+            let image_compressed1 = await compress(files.gambar1.filepath,image_quality1)
+
+            //Proses Membaca dan Upload Ke FTP
+            const ftp_client1 = await new FTPClient()
+            await ftp_client1.connect(ftp1)
+            await ftp_client1.on('ready', async function () {
+                ftp_client1.put(image_compressed1, tujuan_gambar1, function (err) {
+                    if (err) {
+                        res.json(err)
+                    }
+                    ftp_client1.end()
+                    fs.unlinkSync(image_compressed1)
                 })
             })
 
@@ -112,15 +121,21 @@ export async function Upload2(req, res) {
             let arr_filename_gambar2 = files.gambar2.originalFilename.split(".")
             let ext_gambar2 = arr_filename_gambar2[arr_filename_gambar2.length - 1]
             let tujuan_gambar2 = nama_file_gambar2 + "." + ext_gambar2
-            fs.readFile(files.gambar2.filepath, async (err, result) => {
-                const ftp_client = await new FTPClient()
-                await ftp_client.connect(ftp1)
-                await ftp_client.on('ready', function () {
-                    ftp_client.put(result, tujuan_gambar2, function (err) {
-                        if (err) {
-                            res.json(err)
-                        }
-                    })
+
+            //Kompress File
+            let image_quality2 = 20
+            let image_compressed2 = await compress(files.gambar2.filepath,image_quality2)
+
+            //Proses Membaca dan Upload Ke FTP
+            const ftp_client2 = await new FTPClient()
+            await ftp_client2.connect(ftp1)
+            await ftp_client2.on('ready', async function () {
+                ftp_client2.put(image_compressed2, tujuan_gambar2, function (err) {
+                    if (err) {
+                        res.json(err)
+                    }
+                    ftp_client2.end()
+                    fs.unlinkSync(image_compressed2)
                 })
             })
 
@@ -135,15 +150,21 @@ export async function Upload2(req, res) {
             let arr_filename_gambar3 = files.gambar3.originalFilename.split(".")
             let ext_gambar3 = arr_filename_gambar3[arr_filename_gambar3.length - 1]
             let tujuan_gambar3 = nama_file_gambar3 + "." + ext_gambar3
-            fs.readFile(files.gambar3.filepath, async (err, result) => {
-                const ftp_client = await new FTPClient()
-                await ftp_client.connect(ftp1)
-                await ftp_client.on('ready', function () {
-                    ftp_client.put(result, tujuan_gambar3, function (err) {
-                        if (err) {
-                            res.json(err)
-                        }
-                    })
+
+            //Kompress File
+            let image_quality3 = 20
+            let image_compressed3 = await compress(files.gambar3.filepath,image_quality3)
+
+            //Proses Membaca dan Upload Ke FTP
+            const ftp_client3 = await new FTPClient()
+            await ftp_client3.connect(ftp1)
+            await ftp_client3.on('ready', async function () {
+                ftp_client3.put(image_compressed3, tujuan_gambar3, function (err) {
+                    if (err) {
+                        res.json(err)
+                    }
+                    ftp_client3.end()
+                    fs.unlinkSync(image_compressed3)
                 })
             })
 
@@ -158,20 +179,26 @@ export async function Upload2(req, res) {
             let arr_filename_gambar4 = files.gambar4.originalFilename.split(".")
             let ext_gambar4 = arr_filename_gambar4[arr_filename_gambar4.length - 1]
             let tujuan_gambar4 = nama_file_gambar4 + "." + ext_gambar4
-            fs.readFile(files.gambar4.filepath, async (err, result) => {
-                const ftp_client = await new FTPClient()
-                await ftp_client.connect(ftp1)
-                await ftp_client.on('ready', function () {
-                    ftp_client.put(result, tujuan_gambar4, function (err) {
-                        if (err) {
-                            res.json(err)
-                        }
-                    })
+
+            //Kompress File
+            let image_quality4 = 20
+            let image_compressed4 = await compress(files.gambar4.filepath,image_quality4)
+
+            //Proses Membaca dan Upload Ke FTP
+            const ftp_client4 = await new FTPClient()
+            await ftp_client4.connect(ftp1)
+            await ftp_client4.on('ready', async function () {
+                ftp_client4.put(image_compressed4, tujuan_gambar4, function (err) {
+                    if (err) {
+                        res.json(err)
+                    }
+                    ftp_client4.end()
+                    fs.unlinkSync(image_compressed4)
                 })
             })
             var query = `INSERT INTO file_upload2 (user_id, gambar1, gambar2, gambar3, gambar4) VALUES (?,?,?,?,?)`
             await MYSQL.query(query, [req.user.id, tujuan_gambar1, tujuan_gambar2, tujuan_gambar3, tujuan_gambar4])
-            return res.json(files)
+            return res.json(resp_code[4])
         })
     } catch (e) {
         console.log(e)
