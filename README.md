@@ -102,7 +102,7 @@ Install Npm Versi Terbaru
 
 ### Installation
 
-1. Pastikan Sudah Di Undak Menjadi Kontributor Di Repository Ini
+1. Pastikan Sudah Di Undang Menjadi Kontributor Di Repository Ini
 2. Clone the repo
    ```sh
    git clone https://github.com/ap699285/backend_nodejs.git
@@ -126,8 +126,54 @@ Install Npm Versi Terbaru
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+<details>
+  <summary>Daftar Penggunaan</summary>
+  <ol>
+    <li>
+      <a href="#penggunaan-dasar-express-js">Penggunaan Dasar ExpressJs</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+  </ol>
+</details>
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+# Penggunaan Dasar Express Js
+
+1. Perhatikan Pada File 'app.js' Dibawah ini, Default project ini adalah 'type:module', Maka tidak bisa menggunakan 'Require()' untuk memanggil file lain.
+   ```js
+    import express from 'express'
+    import dotenv from 'dotenv'
+    import cors from 'cors'
+    import https from 'https'
+    //import fs from 'fs'
+    dotenv.config()
+
+    const app = express()
+
+    const PORT = process.env.PORT
+
+    import api from './routes/api.js'
+    app.use(cors())
+    app.use(express.json())
+
+    // app.use('/api', api)
+
+    app.use('/api', api, function (req, res, next) {
+        console.log('Request Type:', req.method)
+        next()
+    })
+    app.listen(PORT, () => {
+        console.log('Server running on port : http://127.0.0.1:' + PORT)
+    })
+   ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
