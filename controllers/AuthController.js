@@ -7,7 +7,7 @@ import resp_code from '../src/libs/response/response_code.js'
 import {
     GetJwtToken,
     GetJwtTokenRedis,
-    JwtRedisLogout
+    JwtLogoutRedis
 } from '../src/auth/jwt/useJwt.js'
 import {
     login_validation,
@@ -33,27 +33,41 @@ export async function login(req, res) {
     if (credential == true) {
         try {
             var query1 = "SELECT * FROM users WHERE username = ? and user_banned = ?";
-            const [login] = await MYSQL.query(query1, [username,1])
+            const [login] = await MYSQL.query(query1, [username, 1])
 
             if (login) {
                 var cek_password = bcrypt.compareSync(password, login.password);
 
                 if (cek_password == true) {
-                    //const token = GetJwtToken(login.id, login.role_id, login.email_verification_status)
 
                     //Menggunakan Redis Untuk Auth
-                    const token = await GetJwtTokenRedis(login.id, login.role_id, login.email_verification_status)
+                    const token_from_redis = await GetJwtTokenRedis(login.id, login.role_id, login.email_verification_status)
 
-                    var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
-                    const last_login = MYSQL.query(query1, login.id);
-
-                    //IF GENERATE TOKEN SUCCESS
-                    let data = [{
-                        token: token,
-                        resp_code: resp_code[0]
-                    }];
+                    //Kondisi Jika Redis Down
+                    if (token_from_redis == "redis_error") {
+                        const token_non_redis = await GetJwtToken(login.id, login.role_id, login.email_verification_status)
+                        var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
+                        const last_login = MYSQL.query(query1, login.id);
+                        //IF GENERATE TOKEN SUCCESS
+                        let data = [{
+                            token: token_non_redis,
+                            resp_code: resp_code[0],
+                            from_redis: false
+                        }];
+                        return res.json(data)
+                    } else {
+                        var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
+                        const last_login = MYSQL.query(query1, login.id);
+                        //IF GENERATE TOKEN SUCCESS
+                        let data = [{
+                            token: token_from_redis,
+                            resp_code: resp_code[0],
+                            from_redis: true
+                        }];
+                        return res.json(data)
+                    }
+                    //console.log(token)
                     // var getResponseDecrypt = SetResponseJsonDecrypt(getResponse)
-                    return res.json(data)
                 } else {
                     var data = [resp_code[1]];
                     return res.json(data)
@@ -158,19 +172,34 @@ export async function register_verification(req, res) {
 
             var query_update_users = "UPDATE users SET email_verification_status = 2 WHERE id = ?"
             MYSQL.query(query_update_users, [user_id])
-            const token = await GetJwtTokenRedis(select_users.id, select_users.role_id, 2)
 
-            var query1 = "UPDATE users SET last_login = now() WHERE id = ?"
-            const last_login = await MYSQL.query(query1, user_id);
+            const token_from_redis = await GetJwtTokenRedis(select_users.id, select_users.role_id, 2)
 
-            await MYSQL.commit()
-
-            //IF GENERATE TOKEN SUCCESS
-            let data = [{
-                token: token,
-                resp_code: resp_code[0]
-            }];
-            return res.json(data)
+            //Kondisi Jika Redis Down
+            if (token_from_redis == "redis_error") {
+                const token_non_redis = await GetJwtToken(select_users.id, select_users.role_id, 2)
+                var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
+                const last_login = await MYSQL.query(query1, user_id);
+                //IF GENERATE TOKEN SUCCESS
+                let data = [{
+                    token: token_non_redis,
+                    resp_code: resp_code[0],
+                    from_redis: false
+                }];
+                await MYSQL.commit()
+                return res.json(data)
+            } else {
+                var query1 = 'UPDATE users SET last_login = now() WHERE id = ?'
+                const last_login = await MYSQL.query(query1, user_id);
+                //IF GENERATE TOKEN SUCCESS
+                let data = [{
+                    token: token_from_redis,
+                    resp_code: resp_code[0],
+                    from_redis: true
+                }];
+                await MYSQL.commit()
+                return res.json(data)
+            }
 
         } else {
             return res.json("Kode verifikasi salah, mohon coba lagi")
@@ -181,9 +210,8 @@ export async function register_verification(req, res) {
     }
 }
 
-export async function logout(req, res) {
+export async function Logout(req, res) {
     var user_id = req.user.id
-    console.log(user_id)
-    const logout_user = await JwtRedisLogout(user_id)
+    const logout_user = await JwtLogoutRedis(user_id)
     return res.json(logout_user)
 }

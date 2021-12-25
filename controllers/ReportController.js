@@ -11,13 +11,22 @@ import { get_file_upload2_from_redis, push_file_upload2_to_redis } from '../src/
 export async function CobaRedis(req, res) {
     let user_id = req.params.user_id
     let from_redis = await get_file_upload2_from_redis(user_id)
-    if(from_redis == null){
+    if(from_redis == "redis_error"){
         var query = `SELECT * FROM file_upload2 WHERE user_id = ?`
         const file_upload2 = await MYSQL.query(query, [user_id])
-        const result_file_upload2 = JSON.parse(JSON.stringify(file_upload2))
-        let push_redis = await push_file_upload2_to_redis(user_id,result_file_upload2)
-        res.json(result_file_upload2)
+        //console.log(file_upload2)
+        return res.json(file_upload2)
     } else {
-        res.json(from_redis)
+        if(from_redis == null){
+            var query = `SELECT * FROM file_upload2 WHERE user_id = ?`
+            const file_upload2 = await MYSQL.query(query, [user_id])
+            const result_file_upload2 = JSON.parse(JSON.stringify(file_upload2))
+            let push_redis = await push_file_upload2_to_redis(user_id,result_file_upload2)
+            //console.log(file_upload2)
+            return res.json(file_upload2)
+        } else {
+            //console.log(from_redis)
+            return res.json(from_redis)
+        }
     }
 }

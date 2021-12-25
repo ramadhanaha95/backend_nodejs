@@ -42,6 +42,23 @@ export async function PushJwtToRedis(user_id,token) {
         })
         await client.disconnect()
     } catch (error) {
+        return 'redis_error'
+    }
+}
 
+export async function DestroyJwtFromRedis(user_id) {
+    try {
+        const client = createClient(redisPort);
+        await client.on('ready', (err) => {
+            if (err) {
+                console.log(err)
+            }
+        })
+        await client.connect()
+        await client.DEL("user_id_redis_" + user_id.toString())
+        await client.disconnect()
+        return 'Successfull Delete Token From Redis'
+    } catch (error) {
+        return 'redis_error'
     }
 }

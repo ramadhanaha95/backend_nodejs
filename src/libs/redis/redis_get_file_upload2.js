@@ -1,15 +1,26 @@
 import {
-    client
+    GetJwtFromRedis
 } from '../../../src/libs/redis/connect.js'
 
 export async function get_file_upload2_from_redis(payload) {
     const query = JSON.parse(JSON.stringify(payload))
-
-    const hasil_redis = await client.get(query)
-    return JSON.parse(hasil_redis)
+    try {
+        await redisClient.connect()
+        const hasil_redis = await redisClient.get(query)
+        await redisClient.disconnect()
+        return JSON.parse(hasil_redis)
+    } catch (error) {
+        return "redis_error"
+    }
 }
 
-export async function push_file_upload2_to_redis(payload,payload2) {
+export async function push_file_upload2_to_redis(payload, payload2) {
     const query = JSON.parse(JSON.stringify(payload))
-    await client.set(query, JSON.stringify(payload2))
+    try {
+        await redisClient.connect()
+        await redisClient.set(query, JSON.stringify(payload2))
+        await redisClient.disconnect()
+    } catch (error) {
+        return "redis_error"
+    }
 }
