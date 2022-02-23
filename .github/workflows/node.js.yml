@@ -14,16 +14,16 @@ jobs:
 
     runs-on: ubuntu-latest
     env : 
-    PORT:'8001'
-    REDIS_URL:'redis://192.168.159.135:6379'
-    TOKEN_SECRET:'$2a$12$CyyzX3Zh/eahJ.YOXebnCu0PQdc2/jGXRVCQo05o25Mx2LNgnHx/S'
+    PORT:8001
+    REDIS_URL:redis://192.168.159.135:6379
+    TOKEN_SECRET:$2a$12$CyyzX3Zh/eahJ.YOXebnCu0PQdc2/jGXRVCQo05o25Mx2LNgnHx/S
 
-    DB_CONNECTION:'mysql'
-    DB_HOST:'127.0.0.1'
-    DB_PORT:'3306'
-    DB_DATABASE:'node_project'
-    DB_USERNAME:'root'
-    DB_PASSWORD:'root'
+    DB_CONNECTION:mysql
+    DB_HOST:127.0.0.1
+    DB_PORT:3306
+    DB_DATABASE:node_project
+    DB_USERNAME:root
+    DB_PASSWORD:root
     strategy:
       matrix:
         node-version: [14.x]
